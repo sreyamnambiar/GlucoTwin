@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · GlucoTwin India</title>
+<style>
+  :root{
+    --deep:#081a1e; --paper:#edf1f0; --panel:#f8faf9; --ink:#10272b; --muted:#5b7074; --rule:#cfdad8;
+    --glucose:#0e7c73; --spike:#b3263e; --twin:#7fd8ff; --mint:#5eead4;
+    --serif:"Aptos Display","Segoe UI",Arial,sans-serif;
+    --sans:"Aptos","Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font:15px/1.45 var(--sans);color:var(--ink);background:var(--paper)}
+  button,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid #3b5bdb;outline-offset:2px}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) 440px;min-height:100%}
+  .hero{position:relative;overflow:hidden;background:
+      radial-gradient(800px 640px at 60% 50%,rgba(40,120,170,.30),transparent 68%),
+      radial-gradient(600px 500px at 20% 90%,rgba(14,124,115,.22),transparent 70%),
+      var(--deep);min-height:100vh}
+  #stage,#glow{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #glow{filter:blur(16px) saturate(1.5);opacity:.85;mix-blend-mode:screen;pointer-events:none}
+  .copy{position:relative;z-index:2;padding:42px 46px;max-width:520px;pointer-events:none}
+  .brand{font:600 17px/1 var(--serif);color:#e6f3f1;letter-spacing:.2px}
+  .copy h1{font:600 clamp(30px,3.6vw,46px)/1.08 var(--serif);color:#f2fbfa;margin:26px 0 14px}
+  .copy p{color:#a9c6c6;font-size:16px;max-width:46ch;margin:0}
+  .hint{position:absolute;z-index:2;left:46px;bottom:26px;color:#7fa3a6;font-size:13px;pointer-events:none}
+  .panel{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--panel);border-left:1px solid var(--rule)}
+  form{width:100%;max-width:340px}
+  h2{font:600 26px/1.2 var(--serif);margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 22px;font-size:14px}
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 4px}
+  input{width:100%;padding:10px 11px;border:1px solid var(--rule);border-radius:7px;background:#fff}
+  input:focus{border-color:var(--glucose)}
+  .go{width:100%;margin-top:20px;padding:11px;border:0;border-radius:7px;background:var(--ink);color:#fff;cursor:pointer;font-weight:600}
+  .go:hover{filter:brightness(1.2)} .go:disabled{opacity:.6;cursor:wait}
+  .err{min-height:20px;margin-top:10px;color:var(--spike);font-size:13.5px}
+  .demo{margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .chip{background:transparent;border:1px solid var(--rule);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}
+  .chip:hover{border-color:var(--glucose);color:var(--glucose)}
+  .demo b{color:var(--ink);font-weight:600}
+  .fine{margin-top:14px;font-size:12.5px;color:var(--muted)}
+  @media (max-width:900px){
+    .split{grid-template-columns:1fr}
+    .hero{min-height:56vh}
+    .copy{padding:26px 22px}.copy h1{margin:16px 0 10px}.hint{left:22px;bottom:14px}
+    .panel{border-left:0;border-top:1px solid var(--rule);padding:26px 20px}
+  }
+</style>
+</head>
+<body>
+<div class="split">
+  <section class="hero" id="hero" aria-label="Digital twin illustration">
+    <canvas id="glow" aria-hidden="true"></canvas>
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div class="copy">
+      <div class="brand">GlucoTwin India</div>
+      <h1>See the spike before the meal.</h1>
+      <p>A digital twin of each patient's glucose, updated as their wearable streams in. Ask what a walk, a smaller portion or a millet swap would change.</p>
+    </div>
+    <div class="hint">Move your cursor. The twin turns to follow.</div>
+  </section>
+
+  <section class="panel">
+    <form id="f" autocomplete="on">
+      <h2>Sign in</h2>
+      <p class="sub">Doctors see every patient. Patients see only their own twin.</p>
+      <label for="u">Username</label>
+      <input id="u" name="username" autocomplete="username" required autofocus>
+      <label for="p">Password</label>
+      <input id="p" name="password" type="password" autocomplete="current-password" required>
+      <button class="go" id="go" type="submit">Sign in</button>
+      <div class="err" id="err" role="alert" aria-live="polite"></div>
+      <div class="demo">
+        <div>Demo accounts. Password for both: <b>Twin#2026</b></div>
+        <div class="chips">
+          <button type="button" class="chip" data-u="doctor">Doctor</button>
+          <button type="button" class="chip" data-u="patient3">Patient 3</button>
+        </div>
+      </div>
+      <p class="fine">All data is synthetic. This is a proof of concept, not a medical device.</p>
+    </form>
+  </section>
+</div>
+
+<script>
+/* ---------- form ---------- */
+const $ = s => document.querySelector(s);
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { $('#u').value = c.dataset.u; $('#p').value = 'Twin#2026'; $('#go').focus(); }));
+$('#f').addEventListener('submit', async e => {
+  e.preventDefault(); $('#err').textContent = ''; const b = $('#go'); b.disabled = true; b.textContent = 'Signing in…';
+  try {
+    const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: $('#u').value, password: $('#p').value }) });
+    if (r.ok) { location.href = '/'; return; }
+    const j = await r.json().catch(() => ({})); $('#err').textContent = j.detail || 'Could not sign in.';
+  } catch { $('#err').textContent = 'Cannot reach the server.'; }
+  b.disabled = false; b.textContent = 'Sign in';
+});
+
+/* ---------- 3D holographic head ---------- */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]pose=/.test(location.search);   // reduced motion (or ?pose=) draws one still frame
+const DRAW = !/[?&]nodraw/.test(location.search);
+const POSE = (new URLSearchParams(location.search).get('pose') || '0.3,0').split(',').map(Number);
+const cv = $('#stage'), ctx = cv.getContext('2d'), glow = $('#glow'), gctx = glow.getContext('2d'), hero = $('#hero');
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), gs = (v, s) => Math.exp(-(v / s) * (v / s)), sm = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+function curve(pts) {                                   // smooth cubic through control points
+  const n = pts.length, m = pts.map((p, i) => i === 0 ? (pts[1][1] - p[1]) / (pts[1][0] - p[0]) : i === n - 1 ? (p[1] - pts[i - 1][1]) / (p[0] - pts[i - 1][0]) : (pts[i + 1][1] - pts[i - 1][1]) / (pts[i + 1][0] - pts[i - 1][0]));
+  return x => {
+    if (x <= pts[0][0]) return pts[0][1]; if (x >= pts[n - 1][0]) return pts[n - 1][1];
+    let i = 0; while (x > pts[i + 1][0]) i++;
+    const h = pts[i + 1][0] - pts[i][0], t = (x - pts[i][0]) / h, t2 = t * t, t3 = t2 * t;
+    return (2 * t3 - 3 * t2 + 1) * pts[i][1] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * pts[i + 1][1] + (t3 - t2) * h * m[i + 1];
+  };
+}
+const Y_TOP = 1.2, Y_CHIN = -1.1;
+const HALF_W = curve([[0,.14],[.04,.26],[.10,.40],[.20,.57],[.32,.70],[.45,.75],[.60,.76],[.72,.72],[.84,.60],[.93,.42],[.98,.2],[1,0]]);
+const DEPTH_F = curve([[0,.2],[.04,.5],[.12,.66],[.30,.76],[.45,.80],[.60,.82],[.72,.84],[.82,.80],[.90,.70],[.96,.48],[1,0]]);
+const DEPTH_B = curve([[0,.2],[.08,.52],[.25,.72],[.45,.88],[.6,.96],[.72,.95],[.84,.82],[.92,.62],[.97,.38],[1,0]]);
+const NOSE = curve([[-.40,0],[-.35,.02],[-.30,.22],[-.24,.35],[-.12,.31],[.05,.22],[.22,.12],[.35,.04],[.45,0]]);
+
+function disp(phi, y) {                                 // facial relief: nose, brow, eyes, cheeks, lips, chin, ears
+  const ap = Math.abs(phi); let d = 0;
+  d += NOSE(y) * Math.exp(-Math.pow(phi / (.07 + .13 * sm((.12 - y) / .42)), 2));
+  d += .07 * gs(ap - .17, .06) * gs(y + .27, .05);                       // nostril wings
+  d += .095 * gs(y - .36, .07) * Math.exp(-Math.pow(phi / .85, 4));        // brow ridge
+  d -= .13 * gs(ap - .42, .15) * gs(y - .23, .07);                       // eye sockets
+  d += .06 * gs(ap - .42, .075) * gs(y - .23, .033);                         // eyeballs
+  d += .075 * gs(ap - .72, .26) * gs(y - .02, .12);                         // cheekbones
+  d -= .04 * gs(ap - .70, .25) * gs(y + .33, .12);                         // cheek hollows
+  d += .10 * gs(phi, .26) * gs(y + .53, .042);                            // upper lip
+  d += .11 * gs(phi, .23) * gs(y + .69, .048);                              // lower lip
+  d -= .06 * gs(phi, .32) * gs(y + .605, .02);                            // mouth line
+  d += .13 * gs(phi, .34) * gs(y + .96, .12);                              // chin
+  d -= .04 * gs(ap - 1.05, .30) * gs(y - .50, .14);                        // temples
+  d += .15 * gs(ap - 1.55, .08) * gs(y - .05, .21) - .07 * gs(ap - 1.52, .05) * gs(y - .03, .10);   // ears: rim + inner hollow
+  return d;
+}
+function headPos(i, j, R, M) {
+  const s = i / (R - 1), y = Y_CHIN + (Y_TOP - Y_CHIN) * s, w = -1 + (2 * j + 1) / M;
+  const phi = Math.PI * Math.sign(w) * Math.pow(Math.abs(w), 1.25);       // denser meridians at the face
+  const sf = Math.sin(phi), cf = Math.cos(phi), e = 2 / 2.5;
+  let x = HALF_W(s) * Math.sign(sf) * Math.pow(Math.abs(sf), e), z = (cf >= 0 ? DEPTH_F(s) : DEPTH_B(s)) * Math.sign(cf) * Math.pow(Math.abs(cf), e);
+  const d = disp(phi, y); x += d * sf; z += d * cf;
+  return [x, y, z];
+}
+const NECK_Z = -.14;
+function neckPos(i, j, R, M) {
+  const y = -.80 - 1.25 * i / (R - 1), th = 2 * Math.PI * j / M, r = .34 + .07 * Math.max(0, (-y - 1.5));
+  return [r * Math.sin(th), y, NECK_Z + .95 * r * Math.cos(th)];
+}
+function build(R, M, pos, cz, fade) {
+  const n = R * M, X = new Float32Array(n), Y = new Float32Array(n), Z = new Float32Array(n), NX = new Float32Array(n), NY = new Float32Array(n), NZ = new Float32Array(n), PH = new Float32Array(n), FD = new Float32Array(n);
+  for (let i = 0; i < R; i++) for (let j = 0; j < M; j++) { const k = i * M + j, p = pos(i, j, R, M); X[k] = p[0]; Y[k] = p[1]; Z[k] = p[2]; PH[k] = Math.random() * 6.28; FD[k] = fade(i / (R - 1)); }
+  for (let i = 0; i < R; i++) for (let j = 0; j < M; j++) {
+    const k = i * M + j, a = Math.min(i + 1, R - 1) * M + j, b = Math.max(i - 1, 0) * M + j, c = i * M + (j + 1) % M, d = i * M + (j - 1 + M) % M;
+    const tx = X[a] - X[b], ty = Y[a] - Y[b], tz = Z[a] - Z[b], ux = X[c] - X[d], uy = Y[c] - Y[d], uz = Z[c] - Z[d];
+    let nx = ty * uz - tz * uy, ny = tz * ux - tx * uz, nz = tx * uy - ty * ux, l = Math.hypot(nx, ny, nz);
+    const rx = X[k], rz = Z[k] - cz;
+    if (l < 1e-7) { nx = rx; ny = i === R - 1 ? 1 : (i === 0 ? -1 : 0); nz = rz; l = Math.hypot(nx, ny, nz) || 1; }
+    if (nx * rx + nz * rz < 0 && l >= 1e-7 && Math.hypot(rx, rz) > 1e-3) { nx = -nx; ny = -ny; nz = -nz; }
+    NX[k] = nx / l; NY[k] = ny / l; NZ[k] = nz / l;
+  }
+  const CV = new Float32Array(n);                         // curvature: eyes, lips, nose edge, ears glow brighter
+  for (let i = 0; i < R; i++) for (let j = 0; j < M; j++) {
+    const k = i * M + j, a = Math.min(i + 1, R - 1) * M + j, b = Math.max(i - 1, 0) * M + j, c = i * M + (j + 1) % M, d = i * M + (j - 1 + M) % M;
+    const sx = NX[a] + NX[b] + NX[c] + NX[d], sy = NY[a] + NY[b] + NY[c] + NY[d], sz = NZ[a] + NZ[b] + NZ[c] + NZ[d], l = Math.hypot(sx, sy, sz) || 1;
+    CV[k] = clamp((1 - (NX[k] * sx + NY[k] * sy + NZ[k] * sz) / l) * 34, 0, 1);
+  }
+  return { R, M, n, X, Y, Z, NX, NY, NZ, PH, FD, CV, sx: new Float32Array(n), sy: new Float32Array(n), b: new Float32Array(n), warm: new Float32Array(n), white: new Float32Array(n) };
+}
+const HEAD = build(78, 112, headPos, 0, () => 1);
+const NECK = build(22, 56, neckPos, NECK_Z, s => Math.pow(1 - s, 1.6) * .8);
+
+const FAM = [[70, 150, 255], [215, 240, 255], [255, 120, 66]];     // cool, white, warm
+const LEVELS = 10, buckets = Array.from({ length: 15 * LEVELS }, () => []);
+const L1 = (() => { const v = [-.55, .35, .76], l = Math.hypot(...v); return v.map(x => x / l); })();   // cool key light, front-left
+const L3 = (() => { const v = [.75, -.35, .55], l = Math.hypot(...v); return v.map(x => x / l); })();   // faint warm fill, front-right
+const L2 = (() => { const v = [.85, -.15, -.45], l = Math.hypot(...v); return v.map(x => x / l); })();  // warm light, behind-right
+
+let EDGE_STEP = 1, W, H, dpr, K, cx, cy, t = 0, last = performance.now(), yaw = 0, pitch = 0, slow = 0, lite = /[?&]lite/.test(location.search);
+if (lite) glow.style.display = 'none';
+const mouse = { x: 0, y: 0, active: false };
+const D = 6.2;
+function resize() {
+  dpr = lite ? 1 : Math.min(devicePixelRatio || 1, 2); W = hero.clientWidth; H = hero.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr; glow.width = Math.ceil(W / 5); glow.height = Math.ceil(H / 5);
+  const narrow = W < 700;
+  K = Math.min(H * (narrow ? .19 : .232), W * (narrow ? .26 : .25)); cx = W * (narrow ? .5 : .64); cy = H * (narrow ? .67 : .575);
+}
+addEventListener('resize', () => { resize(); if (reduce) frame(performance.now()); });
+const move = e => { const r = hero.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.active = mouse.x >= -40 && mouse.x <= r.width + 40 && mouse.y >= -40 && mouse.y <= r.height + 40; };
+addEventListener('pointermove', move); addEventListener('pointerdown', move);
+document.addEventListener('pointerleave', () => mouse.active = false);
+hero.style.touchAction = 'pan-y';
+
+let cY, sY, cP, sP;
+const rot = (x, y, z) => { const x1 = x * cY + z * sY, z1 = -x * sY + z * cY; return [x1, y * cP - z1 * sP, y * sP + z1 * cP]; };
+const proj = (x, y, z) => { const r = rot(x, y - .05, z), f = D / (D - r[2]); return [cx + K * r[0] * f, cy - K * r[1] * f, r[2]]; };
+
+function shade(m, ys) {
+  for (let k = 0; k < m.n; k++) {
+    const x = m.X[k], y = m.Y[k] - .05, z = m.Z[k];
+    const x1 = x * cY + z * sY, z1 = -x * sY + z * cY, y1 = y * cP - z1 * sP, z2 = y * sP + z1 * cP, f = D / (D - z2);
+    m.sx[k] = cx + K * x1 * f; m.sy[k] = cy - K * y1 * f;
+    const nx0 = m.NX[k], ny0 = m.NY[k], nz0 = m.NZ[k];
+    const nx1 = nx0 * cY + nz0 * sY, nz1 = -nx0 * sY + nz0 * cY, ny = ny0 * cP - nz1 * sP, nz = ny0 * sP + nz1 * cP, nx = nx1;
+    const c1 = Math.max(0, nx * L1[0] + ny * L1[1] + nz * L1[2]), c2 = Math.max(0, nx * L2[0] + ny * L2[1] + nz * L2[2]), c3 = Math.max(0, nx * L3[0] + ny * L3[1] + nz * L3[2]);
+    const rim = 1 - Math.abs(nz), rim3 = rim * rim * rim;
+    let b = .11 + .09 * Math.max(nz, 0) + .85 * c1 * Math.sqrt(c1) + .55 * rim3 + .95 * c2 * c2 + .45 * c3 * c3 * c3;
+    if (nz < 0) b *= .30;
+    b *= (.84 + .16 * Math.sin(t * 2.2 + m.PH[k])) * m.FD[k];
+    b += 1.0 * gs(m.Y[k] - ys, .07) * m.FD[k];
+    const cv = m.CV[k]; b += 1.25 * cv * (nz > 0 ? 1 : .3);
+    m.b[k] = Math.min(b, 1.6);
+    m.warm[k] = clamp(c2 * 1.1 + c3 * c3 * c3 * 1.4 - c1 * .8, 0, 1);
+    m.white[k] = clamp(c1 * 1.3 + rim3 * 1.2 + cv * 1.1, 0, 1);
+  }
+}
+function edges(m) {
+  const { R, M, sx, sy, b, warm, white } = m;
+  const add = (p, q) => {
+    const bb = (b[p] + b[q]) * .5; if (bb < .24) return; const L = Math.min(LEVELS - 1, (bb * 6) | 0);
+    const wi = ((warm[p] + warm[q]) * 2 + .5) | 0, ui = ((white[p] + white[q]) + .5) | 0;
+    buckets[(wi * 3 + ui) * LEVELS + L].push(sx[p], sy[p], sx[q], sy[q]);
+  };
+  for (let i = 0; i < R; i++) for (let j = 0; j < M; j++) { const k = i * M + j; if (i % EDGE_STEP === 0) add(k, i * M + (j + 1) % M); if (j % EDGE_STEP === 0 && i < R - 1) add(k, k + M); }
+}
+const COOL = [70, 150, 255], WHITE = [215, 240, 255], WARM = [255, 120, 66], mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+function flush() {
+  for (let idx = 0; idx < buckets.length; idx++) {
+    const arr = buckets[idx]; if (!arr.length) continue;
+    const L = idx % LEVELS, ui = ((idx / LEVELS) | 0) % 3, wi = (idx / (3 * LEVELS)) | 0;
+    if (L < 1) { arr.length = 0; continue; }
+    const c = mix(mix(COOL, WHITE, ui / 2), WARM, wi / 4);
+    ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${(.1 + L * .085).toFixed(3)})`; ctx.lineWidth = (.5 + L * .075);
+    ctx.beginPath(); for (let i = 0; i < arr.length; i += 4) { ctx.moveTo(arr[i], arr[i + 1]); ctx.lineTo(arr[i + 2], arr[i + 3]); } ctx.stroke(); arr.length = 0;
+  }
+}
+const dust = Array.from({ length: 150 }, () => { const u = Math.random() * 6.28, v = Math.acos(2 * Math.random() - 1), r = 1.5 + Math.random() * 1.2; return { x: r * Math.sin(v) * Math.cos(u), y: r * Math.cos(v) * 1.1, z: r * Math.sin(v) * Math.sin(u), s: Math.random() * 6.28, sp: .05 + Math.random() * .15 }; });
+const TAGS = [
+  { p: [.62, .42, .30], f: () => `sleep ${(6.6 + .5 * Math.sin(t * .3)).toFixed(1)} h` },
+  { p: [-.52, -.18, .62], f: () => `glucose ${Math.round(146 + 24 * Math.sin(t * .7))} mg/dL` },
+  { p: [.25, -1.25, -.05], f: () => `heart rate ${Math.round(72 + 4 * Math.sin(t * 1.3))}` },
+];
+
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, .05); last = now; t += dt;
+  if (!lite && !reduce) { slow = dt > .045 ? slow + 1 : Math.max(0, slow - 1); if (slow > 40) { slow = 0; if (!lite) { lite = true; glow.style.display = 'none'; resize(); } else if (EDGE_STEP < 3) EDGE_STEP++; } }   // slow machine: drop bloom + retina, then thin the mesh
+  let ty, tp;
+  if (reduce) { ty = POSE[0]; tp = POSE[1] || 0; }
+  else if (mouse.active) { ty = clamp((mouse.x - cx) / (W * .42), -1, 1) * .85; tp = clamp((mouse.y - cy) / (H * .5), -1, 1) * .24; }
+  else { ty = Math.sin(t * .45) * .38; tp = Math.sin(t * .3) * .05; }
+  const k = reduce ? 1 : 1 - Math.exp(-dt * 4.2); yaw += (ty - yaw) * k; pitch += (tp - pitch) * k;
+  cY = Math.cos(yaw); sY = Math.sin(yaw); cP = Math.cos(pitch); sP = Math.sin(pitch);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';
+  const ys = Y_CHIN + (Y_TOP - Y_CHIN) * (((t * .16) % 1.5) - .25);
+  shade(NECK, ys); edges(NECK); shade(HEAD, ys); edges(HEAD); if (DRAW) flush(); else buckets.forEach(b => b.length = 0);
+
+  /* orbiting scanner rings */
+  if (DRAW) [[-1.02, 1.28, 1.15, 1], [.1, 1.6, -.85, -1]].forEach(([y0, r0, tilt, dir], q) => {
+    ctx.lineWidth = 1; ctx.setLineDash([2, 7]); ctx.strokeStyle = 'rgba(127,216,255,.30)'; ctx.beginPath();
+    for (let a = 0; a <= 100; a++) { const th = a / 100 * 6.28 + dir * t * .25, p = proj(r0 * Math.cos(th), y0 + tilt * Math.sin(th) * .5, r0 * Math.sin(th) * .9); a ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    ctx.stroke(); ctx.setLineDash([]);
+    const th = dir * t * .55 + q * 2, p = proj(r0 * Math.cos(th), y0 + tilt * Math.sin(th) * .5, r0 * Math.sin(th) * .9);
+    ctx.fillStyle = 'rgba(190,240,255,.95)'; ctx.beginPath(); ctx.arc(p[0], p[1], 2.4, 0, 6.28); ctx.fill();
+  });
+  /* drifting data dust */
+  if (DRAW) dust.forEach(d => {
+    const p = proj(d.x, ((d.y + t * d.sp + 3) % 3.6) - 1.8, d.z), a = .35 * (.5 + .5 * Math.sin(t * 1.4 + d.s)) * (p[2] > -.5 ? 1 : .4);
+    ctx.fillStyle = `rgba(150,220,255,${a})`; ctx.fillRect(p[0], p[1], 1.4, 1.4);
+  });
+  ctx.globalCompositeOperation = 'source-over';
+
+  /* readouts pinned to the head */
+  ctx.font = '12px ' + getComputedStyle(document.body).fontFamily; ctx.textBaseline = 'middle';
+  if (DRAW) TAGS.forEach((tg, i) => {
+    const p = proj(...tg.p), vis = clamp((p[2] + .1) / .5, 0, 1); if (vis <= .02) return;
+    const txt = tg.f(), w = ctx.measureText(txt).width + 16, dir = (p[0] - cx) >= 0 ? 1 : -1;
+    let bx = dir > 0 ? p[0] + 56 : p[0] - 56 - w; bx = clamp(bx, 10, W - w - 10); const by = p[1] + Math.sin(t * .8 + i) * (reduce ? 0 : 3);
+    ctx.globalAlpha = vis; ctx.strokeStyle = 'rgba(127,216,255,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(dir > 0 ? bx : bx + w, by); ctx.stroke();
+    ctx.fillStyle = 'rgba(127,216,255,.9)'; ctx.beginPath(); ctx.arc(p[0], p[1], 2.2, 0, 6.28); ctx.fill();
+    ctx.fillStyle = 'rgba(6,20,24,.78)'; ctx.strokeStyle = 'rgba(127,216,255,.5)'; ctx.beginPath(); ctx.roundRect(bx, by - 11, w, 22, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#d9f3ff'; ctx.fillText(txt, bx + 8, by); ctx.globalAlpha = 1;
+  });
+
+  if (!lite) { gctx.clearRect(0, 0, glow.width, glow.height); gctx.drawImage(cv, 0, 0, glow.width, glow.height); }   // cheap bloom source
+  if (!reduce) requestAnimationFrame(frame);
+}
+resize(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

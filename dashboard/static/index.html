@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlucoTwin India · virtual patient dashboard</title>
+<style>
+  :root{
+    --paper:#edf1f0; --panel:#f8faf9; --ink:#10272b; --muted:#5b7074; --rule:#cfdad8;
+    --glucose:#0e7c73; --band:rgba(14,124,115,.10); --caution:#c98a12; --spike:#b3263e; --plan-b:#3b5bdb;
+    --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  body.dark{--paper:#10191b;--panel:#1b292b;--ink:#edf5f3;--muted:#a9bfbd;--rule:#3a5052;--soft:#263a3d;--band:rgba(72,190,177,.16);--glucose:#65d6c6;--caution:#f0c15a;--spike:#ff8398;--plan-b:#9db2ff}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--sans);overflow-x:hidden}
+  button,select,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--plan-b);outline-offset:2px}
+  .app{display:grid;grid-template-columns:230px minmax(0,1fr) 320px;min-height:100vh}
+  aside,main{padding:18px;min-width:0;max-width:100%;overflow:hidden}
+  aside.left{border-right:1px solid var(--rule);background:var(--panel);overflow-y:auto;max-height:100vh;position:sticky;top:0}
+  aside.right{border-left:1px solid var(--rule);background:var(--panel)}
+  h1{font:600 19px/1.2 var(--serif);margin:0 0 2px}
+  h2{font:600 15px/1.3 var(--sans);margin:0 0 8px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .plist{list-style:none;margin:0;padding:0}
+  .plist button{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:9px 6px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 8px}
+  .plist button:hover{background:#e6eeec}
+  .plist button[aria-current="true"]{background:#dbe9e6;box-shadow:inset 3px 0 0 var(--glucose)}
+  .plist .n{font-weight:600}.plist .m{color:var(--muted);font-size:12.5px}
+  .plist .g{font:600 15px var(--serif);font-variant-numeric:tabular-nums;grid-row:1/3;grid-column:2;align-self:center}
+  .head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+  .facts{display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--muted);font-size:13px}
+  .facts b{color:var(--ink);font-weight:600}
+  .clock{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .clock time{font:600 14px var(--serif);margin-right:4px}
+  .theme-toggle{background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600}
+  .btn{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:6px 11px;cursor:pointer;font-size:13.5px}
+  .btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--rule)}
+  .btn:hover{filter:brightness(1.15)}
+  .hero{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 12px}
+  .hero-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:6px}
+  .plan{border-left:4px solid var(--rule);padding-left:12px}
+  .plan.a{border-color:var(--caution)} .plan.b{border-color:var(--plan-b)}
+  .plan .lab{font-size:13px;color:var(--muted)}
+  .risk{font:600 42px/1.05 var(--serif);font-variant-numeric:tabular-nums}
+  .risk small{font:400 14px var(--sans);color:var(--muted);margin-left:6px}
+  .risk.hi{color:var(--spike)} .risk.mid{color:var(--caution)} .risk.lo{color:var(--glucose)}
+  .detail{font-size:13px;color:var(--muted)}
+  .detail b{color:var(--ink)}
+  .chart-wrap{position:relative;height:300px}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}
+  .controls label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+  .controls select,.controls input[type=range]{width:100%}
+  .controls select{padding:6px;border:1px solid var(--rule);border-radius:6px;background:#fff}
+  .controls .val{color:var(--ink);font-weight:600}
+  .check{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink)!important}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  section.block{margin-top:16px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+  .small-chart{position:relative;height:210px}
+  .twin-num{font:600 38px/1 var(--serif);font-variant-numeric:tabular-nums}
+  .twin-ci{color:var(--muted);font-size:13px;margin:4px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  th{font-weight:600;text-align:left;color:var(--muted);padding:4px 4px 4px 0;border-bottom:1px solid var(--rule)}
+  td{padding:5px 4px 5px 0;border-bottom:1px solid #e3ebe9}
+  td.r,th.r{text-align:right}
+  .flag{color:var(--spike);font-weight:600}
+  .note{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .evidence td:last-child,.evidence th:last-child{text-align:right}
+  @media (max-width:1100px){.app{grid-template-columns:1fr}aside.left{position:static;max-height:220px;border-right:0;border-bottom:1px solid var(--rule)}aside.right{border-left:0;border-top:1px solid var(--rule)}.hero-top{grid-template-columns:1fr}}
+  @media (max-width:700px){main{padding:14px 12px 28px;margin-left:0!important;margin-right:0!important;width:100%!important}.head{display:block}.head>div:first-child{margin-bottom:12px}.clock{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}.clock time{grid-column:1/-1;margin:0}.clock button{width:100%}.theme-toggle{min-height:38px}.hero{padding:14px 12px 12px}.controls{grid-template-columns:1fr}.chart-wrap{height:240px}.small-chart{height:180px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="left" aria-label="Patients">
+    <h1>GlucoTwin India</h1>
+    <p class="sub">Virtual type 2 diabetes patients. Synthetic data only.</p>
+    <ul class="plist" id="plist"></ul>
+  </aside>
+
+  <main>
+    <div class="head">
+      <div>
+        <h1 id="ptitle">Select a patient</h1>
+        <div class="facts" id="pfacts"></div>
+      </div>
+      <div class="clock" role="group" aria-label="Simulated wearable feed">
+        <time id="clock"></time>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Dark mode</button>
+        <button class="btn" data-adv="3">Stream 3 h</button>
+        <button class="btn" data-adv="12">Stream 12 h</button>
+        <button class="btn ghost" id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-top">
+        <div class="plan a"><div class="lab" id="labA">Plan A</div><div class="risk" id="riskA">–</div><div class="detail" id="detA"></div></div>
+        <div class="plan b"><div class="lab" id="labB">Plan B</div><div class="risk" id="riskB">–</div><div class="detail" id="detB"></div></div>
+      </div>
+      <div class="chart-wrap"><canvas id="fc" role="img" aria-label="Forecast of glucose for the next four hours under plan A and plan B"></canvas></div>
+      <div class="controls">
+        <div><label for="meal">Meal for plan B</label><select id="meal"></select></div>
+        <div><label for="portion">Portion <span class="val" id="portionV">1.0x</span></label><input id="portion" type="range" min="0.5" max="1.5" step="0.1" value="1"></div>
+        <div><label for="sleep">Last night's sleep <span class="val" id="sleepV"></span></label><input id="sleep" type="range" min="3" max="9" step="0.5" value="7"></div>
+        <div><label class="check"><input id="walk" type="checkbox" checked> Walk 15 min after eating</label></div>
+      </div>
+      <div class="presets">
+        <button class="btn ghost" id="pWalk">Add a walk</button>
+        <button class="btn ghost" id="pSwap">Swap to the lowest-GI option</button>
+        <button class="btn ghost" id="pHalf">Half portion</button>
+        <button class="btn ghost" id="pSame">Match plan A</button>
+      </div>
+      <p class="note" id="fnote"></p>
+    </div>
+
+    <section class="block">
+      <h2>Last 36 hours</h2>
+      <div class="small-chart"><canvas id="tl" role="img" aria-label="Glucose over the last 36 hours with meals marked"></canvas></div>
+    </section>
+
+    <section class="block evidence">
+      <h2>How well does it work?</h2>
+      <div id="evidence"><p class="note">Loading evaluation…</p></div>
+    </section>
+  </main>
+
+  <aside class="right" aria-label="Twin state">
+    <h2>Twin state</h2>
+    <div class="twin-num" id="gain">–</div>
+    <div class="twin-ci" id="gainci">mg/dL rise per unit of glycemic load</div>
+    <div class="small-chart" style="height:170px"><canvas id="gh" role="img" aria-label="How the twin's estimate of this patient's response sharpens with each observed meal"></canvas></div>
+    <p class="note" id="gnote"></p>
+    <h2 style="margin-top:18px">Recent meals</h2>
+    <table><thead><tr><th>Meal</th><th class="r">Predicted</th><th class="r">Actual</th></tr></thead><tbody id="outcomes"></tbody></table>
+    <p class="note">Rise in mg/dL within 2 h. Walks are inferred from step counts. Red marks a spike (rise of 60 or more).</p>
+  </aside>
+</div>
+
+<script src="/static/chart.umd.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const applyTheme = dark => {
+  document.body.classList.toggle('dark', dark);
+  const b = $('#themeToggle');
+  b.textContent = dark ? 'Light mode' : 'Dark mode';
+  b.setAttribute('aria-pressed', String(dark));
+  localStorage.setItem('glucotwin-theme', dark ? 'dark' : 'light');
+};
+const savedTheme = localStorage.getItem('glucotwin-theme');
+applyTheme(savedTheme === 'dark' || (savedTheme === null && matchMedia('(prefers-color-scheme: dark)').matches));
+$('#themeToggle').addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
+const api = (p, o) => fetch('/api' + p, o).then(r => { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); });
+const post = (p, b) => api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b || {}) });
+const cs = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+Chart.defaults.animation = false;
+Chart.defaults.font.family = cs('--sans');
+Chart.defaults.color = cs('--muted');
+
+let pid = null, P = null, LIB = {}, charts = {}, timer = null;
+
+const bandPlugin = { id: 'band', beforeDatasetsDraw(c) {
+  const { ctx, chartArea: a, scales: { y } } = c; if (!y) return;
+  const top = y.getPixelForValue(180), bot = y.getPixelForValue(70);
+  ctx.save(); ctx.fillStyle = cs('--band'); ctx.fillRect(a.left, top, a.right - a.left, bot - top);
+  ctx.strokeStyle = 'rgba(179,38,62,.45)'; ctx.setLineDash([5, 4]); ctx.beginPath();
+  ctx.moveTo(a.left, top); ctx.lineTo(a.right, top); ctx.stroke(); ctx.restore(); } };
+
+const fmtT = iso => { const d = new Date(iso); return d.getDate() + ' ' + d.toLocaleString('en', { month: 'short' }) + ' ' + d.getFullYear() + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const setClock = () => { $('#clock').textContent = fmtT(new Date()); };
+const riskClass = p => p >= .66 ? 'hi' : p >= .33 ? 'mid' : 'lo';
+const mealLabel = n => n.replace(/_/g, ' ');
+
+async function init() {
+  LIB = await api('/meals');
+  const sel = $('#meal');
+  for (const [slot, items] of Object.entries(LIB)) {
+    const g = document.createElement('optgroup'); g.label = slot[0].toUpperCase() + slot.slice(1);
+    items.forEach(m => { const o = document.createElement('option'); o.value = m.name; o.textContent = `${mealLabel(m.name)} · GI ${m.gi}`; o.title = `${m.carbs_g} g carbs`; g.appendChild(o); });
+    sel.appendChild(g);
+  }
+  const list = await api('/patients?limit=60');
+  $('#plist').innerHTML = list.map(p => `<li><button data-id="${p.id}"><span class="n">Patient ${p.id}</span><span class="m">${p.age} ${p.sex} · HbA1c ${p.hba1c.toFixed(1)}</span><span class="g">${p.glucose_now ?? '–'}</span></button></li>`).join('');
+  $('#plist').addEventListener('click', e => { const b = e.target.closest('button'); if (b) load(+b.dataset.id); });
+  loadEvidence();
+  load(list[0].id);
+}
+
+async function load(id) {
+  pid = id;
+  document.querySelectorAll('#plist button').forEach(b => b.setAttribute('aria-current', b.dataset.id == id));
+  P = await api(`/patients/${id}`);
+  const e = P.ehr;
+  $('#ptitle').textContent = `Patient ${id}: ${e.age}-year-old ${e.sex === 'F' ? 'woman' : 'man'}`;
+  $('#pfacts').innerHTML = [`HbA1c <b>${e.hba1c.toFixed(1)}</b>`, `BMI <b>${e.bmi}</b>`, `diabetes for <b>${e.duration_years} y</b>`,
+    e.on_metformin ? `metformin, <b>${Math.round(e.adherence * 100)}%</b> of doses taken` : 'no metformin',
+    `${e.diet_pattern.replace('_', ' ')} diet`, `time in range (24 h) <b>${P.tir_24h}%</b>`].map(s => `<span>${s}</span>`).join('');
+  setClock();
+  if (P.last_sleep_hours != null) $('#sleep').value = P.last_sleep_hours;
+  $('#sleepV').textContent = $('#sleep').value + ' h';
+  $('#meal').value = P.suggested.meal;
+  $('#portion').value = 1; $('#portionV').textContent = '1.0x';
+  $('#walk').checked = true;
+  drawSide(); drawTimeline(); forecast();
+}
+
+async function advance(h) {
+  const r = await post(`/patients/${pid}/advance`, { hours: h });
+  if (r.reached_end) $('#fnote').textContent = 'End of the recorded 14 days reached. Press Reset to start again.';
+  await load(pid);
+}
+
+function scenarios() {
+  const sleep = +$('#sleep').value;
+  const usual = P.suggested.meal;
+  return [
+    { label: 'Plan A', meal: usual, portion: 1, walk: false, sleep_hours: sleep },
+    { label: 'Plan B', meal: $('#meal').value, portion: +$('#portion').value, walk: $('#walk').checked, sleep_hours: sleep },
+  ];
+}
+
+function forecast() { clearTimeout(timer); timer = setTimeout(runForecast, 120); }
+async function runForecast() {
+  const sc = scenarios();
+  const r = await post(`/patients/${pid}/whatif`, { scenarios: sc });
+  const [A, B] = r.scenarios;
+  const desc = p => `${mealLabel(p.meal)}, ${p.portion.toFixed(1)}x${p.walk ? ', walk after' : ', no walk'}`;
+  [['A', A, sc[0]], ['B', B, sc[1]]].forEach(([k, s, p]) => {
+    $('#lab' + k).textContent = `Plan ${k}: ${desc(p)}`;
+    const el = $('#risk' + k); const pr = s.p_spike_ensemble;
+    el.className = 'risk ' + riskClass(pr); el.innerHTML = `${Math.round(pr * 100)}%<small>chance of a spike</small>`;
+    $('#det' + k).innerHTML = `Peak <b>${Math.round(s.peak)}</b> mg/dL at ${s.peak_minute} min, above 180 for <b>${s.minutes_above_180} min</b><br>twin ${Math.round(s.p_spike * 100)}% · model ${Math.round(s.ml_p_spike * 100)}%`;
+  });
+  $('#fnote').textContent = r.note + ' Spike means a rise of 60 mg/dL or more within 2 hours.';
+  const t = A.minutes.map(m => (m / 60).toFixed(1) + ' h');
+  const ds = (label, data, color, extra = {}) => ({ label, data, borderColor: color, backgroundColor: color, borderWidth: 2.5, pointRadius: 0, tension: .35, ...extra });
+  const cfg = { type: 'line', data: { labels: t, datasets: [
+    ds('A high', A.hi, 'transparent', { fill: '+1', backgroundColor: 'rgba(201,138,18,.14)', borderWidth: 0 }),
+    ds('A low', A.lo, 'transparent', { borderWidth: 0 }),
+    ds('Plan A', A.glucose, cs('--caution')),
+    ds('B high', B.hi, 'transparent', { fill: '+1', backgroundColor: 'rgba(59,91,219,.12)', borderWidth: 0 }),
+    ds('B low', B.lo, 'transparent', { borderWidth: 0 }),
+    ds('Plan B', B.glucose, cs('--plan-b')),
+  ] }, options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { labels: { filter: i => i.text.startsWith('Plan') } }, tooltip: { filter: i => i.dataset.label.startsWith('Plan') } },
+    scales: { y: { title: { display: true, text: 'mg/dL' }, suggestedMin: 60, grid: { color: 'rgba(0,0,0,.05)' } }, x: { ticks: { maxTicksLimit: 9 }, grid: { display: false } } } }, plugins: [bandPlugin] };
+  upsert('fc', '#fc', cfg);
+}
+
+function drawTimeline() {
+  const T = P.timeline, idx = {};
+  T.t.forEach((x, i) => idx[x] = i);
+  const marks = T.t.map(() => null);
+  P.meals.forEach(m => { const i = idx[m.time]; if (i != null && T.glucose[i] != null) marks[i] = T.glucose[i]; });
+  upsert('tl', '#tl', { type: 'line', data: { labels: T.t.map(fmtT), datasets: [
+    { label: 'Glucose', data: T.glucose, borderColor: cs('--glucose'), borderWidth: 1.8, pointRadius: 0, spanGaps: false, tension: .2 },
+    { label: 'Meal logged', data: marks, showLine: false, pointStyle: 'triangle', pointRadius: 6, backgroundColor: cs('--ink'), borderColor: cs('--ink') } ] },
+    options: { maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: false }, scales: { y: { suggestedMin: 60, title: { display: true, text: 'mg/dL' }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { ticks: { maxTicksLimit: 8, maxRotation: 0 }, grid: { display: false } } } }, plugins: [bandPlugin] });
+}
+
+function drawSide() {
+  const tw = P.twin;
+  $('#gain').textContent = tw.gain.toFixed(2);
+  $('#gainci').textContent = `95% range ${tw.ci_low.toFixed(2)} to ${tw.ci_high.toFixed(2)} · mg/dL rise per unit of glycemic load`;
+  $('#gnote').textContent = `Learned from ${tw.meals_observed} observed meals. It starts from an HbA1c-based estimate and narrows as readings stream in.`;
+  const h = tw.history;
+  upsert('gh', '#gh', { type: 'line', data: { labels: h.map(x => x.n), datasets: [
+    { label: 'hi', data: h.map(x => x.hi), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(14,124,115,.16)' },
+    { label: 'lo', data: h.map(x => x.lo), borderWidth: 0, pointRadius: 0 },
+    { label: 'Estimate', data: h.map(x => x.gain), borderColor: cs('--glucose'), borderWidth: 2, pointRadius: 0, tension: .2 } ] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { filter: i => i.dataset.label === 'Estimate' } },
+      scales: { x: { title: { display: true, text: 'meals observed' }, ticks: { maxTicksLimit: 6 }, grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,.05)' } } } } });
+  $('#outcomes').innerHTML = P.recent_outcomes.length ? P.recent_outcomes.map(o => `<tr><td>${mealLabel(o.meal)}</td><td class="r">${o.predicted_rise}</td><td class="r ${o.spike ? 'flag' : ''}">${Math.max(0, o.observed_rise)}</td></tr>`).join('') : '<tr><td colspan="3" class="note">No completed meals yet. Stream forward to see outcomes.</td></tr>';
+}
+
+async function loadEvidence() {
+  try {
+    const m = await api('/model-card'); const a = m.ablation, t = m.twin_eval, s = m.spike;
+    const row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`;
+    const late = t['after 10 observed meals'], rec = t.parameter_recovery;
+    $('#evidence').innerHTML = `<table><thead><tr><th>Predicting a post-meal spike (AUROC, 45 held-out patients)</th><th>Score</th></tr></thead><tbody>
+      ${row('HbA1c only', s.hba1c_only.auroc)}${row('Meal only', a['meal only'].auroc)}${row('Meal + health record', a['meal + static EHR'].auroc)}
+      ${row('Meal + wearable and CGM data', a['meal + dynamic wearables/CGM'].auroc)}${row('Both streams fused (LightGBM)', a['FUSION (meal + EHR + wearables/CGM)'].auroc)}
+      ${row('Live twin, after 10 meals (180 other patients)', late.auroc_spike_live)}</tbody></table>
+      <table style="margin-top:10px"><thead><tr><th>Error in predicted rise (mg/dL)</th><th>MAE</th></tr></thead><tbody>
+      ${row('Predict the average', late.mae_constant)}${row('Fused LightGBM', s.fusion_lightgbm.rise_mae)}${row('Twin with HbA1c estimate only', late.mae_prior_twin)}${row('Live twin, after 10 meals', late.mae_live_twin)}</tbody></table>
+      <p class="note">The twin's estimate of a patient's response is off by ${rec.median_abs_pct_err_prior}% from the HbA1c start and ${rec.median_abs_pct_err_live}% after about ${Math.round(rec.mean_meals_observed)} meals. All data is synthetic, so these scores show the pipeline works, not clinical accuracy.</p>`;
+  } catch (e) { $('#evidence').innerHTML = '<p class="note">Evaluation results are not available yet. Run the training scripts first.</p>'; }
+}
+
+function upsert(key, sel, cfg) { if (charts[key]) charts[key].destroy(); charts[key] = new Chart($(sel), cfg); }
+
+document.querySelectorAll('[data-adv]').forEach(b => b.addEventListener('click', () => advance(+b.dataset.adv)));
+$('#reset').addEventListener('click', async () => { await post(`/patients/${pid}/reset`); $('#fnote').textContent = ''; load(pid); });
+['meal', 'portion', 'sleep', 'walk'].forEach(i => $('#' + i).addEventListener('input', () => {
+  $('#portionV').textContent = (+$('#portion').value).toFixed(1) + 'x'; $('#sleepV').textContent = $('#sleep').value + ' h'; forecast(); }));
+$('#pWalk').addEventListener('click', () => { $('#walk').checked = true; forecast(); });
+$('#pHalf').addEventListener('click', () => { $('#portion').value = .5; $('#portionV').textContent = '0.5x'; forecast(); });
+$('#pSame').addEventListener('click', () => { $('#meal').value = P.suggested.meal; $('#portion').value = 1; $('#portionV').textContent = '1.0x'; $('#walk').checked = false; forecast(); });
+$('#pSwap').addEventListener('click', () => { const items = LIB[P.suggested.slot]; $('#meal').value = items.reduce((a, b) => b.gi < a.gi ? b : a).name; forecast(); });
+setClock();
+setInterval(setClock, 30000);
+init();
+</script>
+</body>
+</html>

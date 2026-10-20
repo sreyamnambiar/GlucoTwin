@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+data/synthetic/
+models/artifacts/*.txt
+models/artifacts/meal_dataset.parquet
+.venv/
+audit.log
+server.log

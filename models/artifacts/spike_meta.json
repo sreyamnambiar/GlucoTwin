@@ -1,0 +1,105 @@
+{
+  "features": [
+    "pre_glucose",
+    "g_diff_15m",
+    "g_diff_30m",
+    "g_mean_1h",
+    "g_std_1h",
+    "g_mean_6h",
+    "g_max_3h",
+    "hr_30m",
+    "steps_1h",
+    "hour",
+    "slot",
+    "carbs_g",
+    "gi",
+    "glycemic_load",
+    "mins_since_prev_meal",
+    "prev_meal_gl",
+    "sleep_hours",
+    "deep_pct",
+    "diet_pattern",
+    "region_south",
+    "sex_male",
+    "age",
+    "bmi",
+    "hba1c",
+    "duration_years",
+    "egfr",
+    "ldl",
+    "triglycerides",
+    "family_history",
+    "tcf7l2_risk_alleles",
+    "on_metformin",
+    "adherence",
+    "activity_level",
+    "late_dinner",
+    "rest_hr",
+    "usual_sleep_h"
+  ],
+  "spike_rise_threshold": 60.0,
+  "metrics": {
+    "n_test_meals": 2082,
+    "spike_rate": 0.465,
+    "fusion_lightgbm": {
+      "auroc": 0.872,
+      "auprc": 0.858,
+      "brier": 0.146,
+      "rise_mae": 24.6
+    },
+    "hba1c_only": {
+      "auroc": 0.58,
+      "auprc": 0.516,
+      "brier": 0.245
+    },
+    "glycemic_load_only": {
+      "auroc": 0.857,
+      "auprc": 0.837,
+      "brier": 0.16
+    },
+    "cgm_only (pre-glucose + trend)": {
+      "auroc": 0.593,
+      "auprc": 0.527,
+      "brier": 0.243
+    },
+    "meal+hba1c": {
+      "auroc": 0.866,
+      "auprc": 0.854,
+      "brier": 0.151
+    },
+    "rise_mae_predict_mean": 38.4,
+    "by_slot_auroc": {
+      "0": 0.781,
+      "1": 0.818,
+      "2": 0.763,
+      "3": 0.813
+    },
+    "calibration": [
+      {
+        "pred": 0.047,
+        "obs": 0.053,
+        "n": 417
+      },
+      {
+        "pred": 0.191,
+        "obs": 0.207,
+        "n": 416
+      },
+      {
+        "pred": 0.413,
+        "obs": 0.447,
+        "n": 416
+      },
+      {
+        "pred": 0.685,
+        "obs": 0.697,
+        "n": 416
+      },
+      {
+        "pred": 0.904,
+        "obs": 0.921,
+        "n": 417
+      }
+    ]
+  }
+}

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlucoTwin India</title>
+<style>
+  :root{
+    --paper:#eef2f1; --panel:#fbfcfb; --ink:#10272b; --muted:#60757a; --rule:#dbe4e2; --soft:#f1f5f4;
+    --glucose:#0e7c73; --band:rgba(14,124,115,.09); --caution:#c98a12; --spike:#b3263e; --plan-b:#3b5bdb;
+    --serif:"Aptos Display","Segoe UI",Arial,sans-serif;
+    --sans:"Aptos","Segoe UI",Roboto,Arial,sans-serif;
+  }
+  body.dark{--paper:#10191b;--panel:#1b292b;--ink:#edf5f3;--muted:#a9bfbd;--rule:#3a5052;--soft:#263a3d;--band:rgba(72,190,177,.16);--glucose:#65d6c6;--caution:#f0c15a;--spike:#ff8398;--plan-b:#9db2ff}
+  body.dark input[type=search],body.dark .field input{background:#243638;color:var(--ink)}
+  body.dark .btn{background:var(--glucose);color:#10272b}
+  body.dark .btn:hover{filter:brightness(1.12)}
+  body.dark .btn.ghost{background:var(--panel);color:var(--ink)}
+  body.dark .seg button[aria-pressed="true"],body.dark .plist button[aria-current="true"]{background:#294547;color:var(--ink)}
+  body.dark .sugg li[aria-selected="true"],body.dark .sugg li:hover{background:#294547}
+  body.dark .chip.warn{background:#4b3c1d;border-color:#8f7130}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);overflow-x:hidden}
+  button,select,input{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--plan-b);outline-offset:2px}
+  h1{font:600 22px/1.2 var(--serif);margin:0}
+  h2{font:600 15px/1.3 var(--sans);margin:0 0 10px}
+  .app{display:grid;grid-template-columns:260px minmax(0,1fr) 300px;min-height:100vh}
+  aside{padding:20px 16px;background:var(--panel);min-width:0}
+  aside.left{border-right:1px solid var(--rule);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  aside.right{border-left:1px solid var(--rule)}
+  main{padding:20px 24px 40px;min-width:0;max-width:100%;overflow:hidden}
+  .brand{font:600 18px/1 var(--serif);margin-bottom:16px}
+  .count{color:var(--muted);font-size:13px}
+  .rail-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  input[type=search],.field input{width:100%;padding:9px 11px;border:1px solid var(--rule);border-radius:8px;background:#fff}
+  .seg{display:flex;gap:4px;margin:10px 0 8px;background:var(--soft);padding:3px;border-radius:8px}
+  .seg button{flex:1;border:0;background:none;padding:5px 4px;border-radius:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .plist{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1}
+  .plist button{width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 8px 8px 12px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:0 8px;position:relative}
+  .plist button:hover{background:var(--soft)}
+  .plist button[aria-current="true"]{background:#e2eeeb}
+  .plist button.attn::before{content:"";position:absolute;left:3px;top:9px;bottom:9px;width:3px;border-radius:2px;background:var(--spike)}
+  .plist .n{font-weight:600;font-size:14px}
+  .plist .m{color:var(--muted);font-size:12.5px;grid-column:1}
+  .plist .g{font:600 15px var(--serif);font-variant-numeric:tabular-nums;grid-row:1/3;grid-column:2;align-self:center}
+  .plist .g.hi{color:var(--spike)}
+  .topbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:6px;font-size:13px;color:var(--muted)}
+  .topbar .theme-toggle{margin-left:4px}
+  .topbar b{color:var(--ink);font-weight:600}
+  .phead{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between;align-items:flex-end;margin-bottom:16px;min-width:0}
+  .phead>div:first-child{min-width:0}
+  .phead h1{overflow-wrap:anywhere}
+  .facts{display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--muted);font-size:13.5px;margin-top:4px}
+  .facts b{color:var(--ink);font-weight:600}
+  .clock{display:flex;gap:8px;align-items:center;min-width:0;max-width:100%;flex-wrap:wrap}
+  .clock time{font:600 14px var(--serif);margin-right:4px}
+  .theme-toggle{background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600}
+  .btn{background:var(--ink);color:#fff;border:0;border-radius:7px;padding:7px 12px;cursor:pointer;font-size:13.5px}
+  .btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--rule)}
+  .btn:hover{filter:brightness(1.12)} .btn.ghost:hover{border-color:var(--glucose);filter:none}
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  details.card{padding:0}
+  details.card>summary{cursor:pointer;padding:14px 20px;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between}
+  details.card>summary::after{content:"Show";font-weight:400;color:var(--muted);font-size:13px}
+  details.card[open]>summary::after{content:"Hide"}
+  details.card>.body{padding:0 20px 18px}
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .plan{border-left:3px solid var(--rule);padding-left:14px;min-width:0}
+  .plan.a{border-color:var(--caution)} .plan.b{border-color:var(--plan-b)}
+  .plan label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .field{position:relative}
+  .sugg{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 4px);margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 24px rgba(16,39,43,.12)}
+  .sugg li{display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:14px}
+  .sugg li[aria-selected="true"],.sugg li:hover{background:#e2eeeb}
+  .sugg .sm{color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;min-height:28px;align-items:center}
+  .chip{background:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:2px 10px;font-size:13px;display:inline-flex;gap:6px;align-items:baseline}
+  .chip small{color:var(--muted);font-size:12px}
+  .chip.warn{background:#fdf3dc;border-color:#ecd28f}
+  .total{font-size:13px;color:var(--muted);margin-left:2px}
+  .muted{color:var(--muted);font-size:13px}
+  .risk{font:600 40px/1.05 var(--serif);font-variant-numeric:tabular-nums;margin-top:6px}
+  .risk small{font:400 14px var(--sans);color:var(--muted);margin-left:6px}
+  .risk.hi{color:var(--spike)} .risk.mid{color:var(--caution)} .risk.lo{color:var(--glucose)}
+  .detail{font-size:13px;color:var(--muted)} .detail b{color:var(--ink)}
+  .chart-wrap{position:relative;height:290px;margin-top:10px}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 22px;margin-top:14px;padding-top:14px;border-top:1px solid var(--rule)}
+  .controls label{display:block;font-size:13px;color:var(--muted);margin-bottom:2px}
+  .controls input[type=range]{width:100%}
+  .val{color:var(--ink);font-weight:600}
+  .check{display:flex;gap:8px;align-items:center;color:var(--ink)!important;font-size:14px!important;padding-top:18px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .small-chart{position:relative;height:200px}
+  .twin-num{font:600 38px/1 var(--serif);font-variant-numeric:tabular-nums}
+  .twin-ci{color:var(--muted);font-size:13px;margin:4px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  th{font-weight:600;text-align:left;color:var(--muted);padding:5px 4px 5px 0;border-bottom:1px solid var(--rule)}
+  td{padding:6px 4px 6px 0;border-bottom:1px solid var(--soft)}
+  td.r,th.r{text-align:right} .flag{color:var(--spike);font-weight:600}
+  .evidence td:last-child,.evidence th:last-child{text-align:right}
+  .patient-mode aside.left,.patient-mode aside.right,.patient-mode .evidence,.patient-mode .internals{display:none}
+  .patient-mode .app{grid-template-columns:minmax(0,1fr)}
+  .patient-mode main{max-width:960px;margin:0 auto;width:100%}
+  @media (max-width:1180px){.app{grid-template-columns:1fr}aside.left{position:static;height:auto;max-height:340px;border-right:0;border-bottom:1px solid var(--rule)}aside.right{border-left:0;border-top:1px solid var(--rule)}.plans{grid-template-columns:1fr}}
+  @media (max-width:700px){main{padding:14px 12px 28px;margin-left:0!important;margin-right:0!important;width:100%!important}.topbar{display:none}.phead{display:block}.phead>div:first-child{margin-bottom:12px}.clock{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}.clock time{grid-column:1/-1;margin:0}.clock button{width:100%;min-width:0}.theme-toggle{min-height:38px}.card{padding:14px 12px}.controls{grid-template-columns:1fr}.chart-wrap{height:240px}.small-chart{height:180px}.facts{gap:2px 10px}aside{padding:16px 12px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="left" aria-label="Patients">
+    <div class="brand">GlucoTwin India</div>
+    <div class="rail-head"><h2 style="margin:0">Patients</h2><span class="count" id="attnCount"></span></div>
+    <input id="psearch" type="search" placeholder="Search patients" aria-label="Search patients">
+    <div class="seg" role="group" aria-label="Sort patients">
+      <button data-sort="attention" aria-pressed="true">Needs attention</button>
+      <button data-sort="hba1c" aria-pressed="false">HbA1c</button>
+      <button data-sort="id" aria-pressed="false">Number</button>
+    </div>
+    <ul class="plist" id="plist"></ul>
+  </aside>
+
+  <main>
+    <div class="topbar"><span id="who"></span><button class="btn ghost" id="logout">Sign out</button></div>
+    <header class="phead">
+      <div><h1 id="ptitle">Loading…</h1><div class="facts" id="pfacts"></div></div>
+      <div class="clock" role="group" aria-label="Simulated wearable feed">
+        <time id="clock"></time>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Dark mode</button>
+        <button class="btn" data-adv="3">Stream 3 h</button>
+        <button class="btn" data-adv="12">Stream 12 h</button>
+        <button class="btn ghost" id="reset">Reset</button>
+      </div>
+    </header>
+
+    <section class="card" aria-label="Meal forecast">
+      <div class="plans">
+        <div class="plan a">
+          <label for="foodA">What is being eaten?</label>
+          <div class="field"><input id="foodA" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="suggA" placeholder="e.g. 2 idli, sambar, coconut chutney"><ul class="sugg" id="suggA" role="listbox" hidden></ul></div>
+          <div class="chips" id="chipsA"></div>
+          <div class="risk" id="riskA">–</div>
+          <div class="detail" id="detA"></div>
+        </div>
+        <div class="plan b">
+          <label for="foodB">Try instead (optional)</label>
+          <div class="field"><input id="foodB" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="suggB" placeholder="Leave empty to keep the same meal"><ul class="sugg" id="suggB" role="listbox" hidden></ul></div>
+          <div class="chips" id="chipsB"></div>
+          <div class="risk" id="riskB">–</div>
+          <div class="detail" id="detB"></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="fc" role="img" aria-label="Forecast of glucose for the next four hours under plan A and plan B"></canvas></div>
+      <div class="controls">
+        <div><label for="portion">Portion in plan B <span class="val" id="portionV">1.0x</span></label><input id="portion" type="range" min="0.5" max="1.5" step="0.1" value="1"></div>
+        <div><label for="sleep">Last night's sleep <span class="val" id="sleepV"></span></label><input id="sleep" type="range" min="3" max="9" step="0.5" value="7"></div>
+        <div><label class="check"><input id="walk" type="checkbox" checked> Walk 15 min after eating (plan B)</label></div>
+      </div>
+      <div class="presets">
+        <button class="btn ghost" id="pWalk">Add a walk</button>
+        <button class="btn ghost" id="pSwap">Suggest a lower-GI swap</button>
+        <button class="btn ghost" id="pHalf">Half portion</button>
+        <button class="btn ghost" id="pSame">Reset plan B</button>
+      </div>
+      <p class="note" id="fnote" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <h2>Last 36 hours</h2>
+      <div class="small-chart"><canvas id="tl" role="img" aria-label="Glucose over the last 36 hours with meals marked"></canvas></div>
+    </section>
+
+    <details class="card evidence"><summary>How well does it work?</summary><div class="body" id="evidence"><p class="note">Loading evaluation…</p></div></details>
+    <details class="card" id="auditBlock" hidden><summary>Access log</summary><div class="body">
+      <table><thead><tr><th>Time</th><th>User</th><th>Action</th><th class="r">Patient</th></tr></thead><tbody id="audit"></tbody></table>
+      <p class="note">Every sign-in and record view is logged. Bursts of the same action are merged.</p></div></details>
+  </main>
+
+  <aside class="right" aria-label="Twin state">
+    <h2>Twin state</h2>
+    <div class="twin-num" id="gain">–</div>
+    <div class="twin-ci" id="gainci"></div>
+    <div class="small-chart" style="height:160px"><canvas id="gh" role="img" aria-label="How the twin's estimate of this patient's response sharpens with each observed meal"></canvas></div>
+    <p class="note" id="gnote"></p>
+    <h2 style="margin-top:20px">Recent meals</h2>
+    <table><thead><tr><th>Meal</th><th class="r">Predicted</th><th class="r">Actual</th></tr></thead><tbody id="outcomes"></tbody></table>
+    <p class="note">Rise in mg/dL within 2 h. Walks are inferred from step counts. Red marks a spike (60 or more).</p>
+  </aside>
+</div>
+
+<script src="/static/chart.umd.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const applyTheme = dark => {
+  document.body.classList.toggle('dark', dark);
+  const b = $('#themeToggle');
+  b.textContent = dark ? 'Light mode' : 'Dark mode';
+  b.setAttribute('aria-pressed', String(dark));
+  localStorage.setItem('glucotwin-theme', dark ? 'dark' : 'light');
+};
+const savedTheme = localStorage.getItem('glucotwin-theme');
+applyTheme(savedTheme === 'dark');
+$('#themeToggle').addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
+const api = async (p, o) => {
+  const r = await fetch('/api' + p, o);
+  if (r.status === 401) { location.href = '/login'; throw new Error('signed out'); }
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.detail || (p + ' ' + r.status)); }
+  return r.json();
+};
+const post = (p, b) => api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b || {}) });
+const cs = n => getComputedStyle(document.body).getPropertyValue(n).trim();
+Chart.defaults.animation = false; Chart.defaults.font.family = cs('--sans'); Chart.defaults.color = cs('--muted');
+
+let flash = '', pid = null, P = null, ME = null, COHORT = [], sortMode = 'attention', charts = {}, timer = null, reqId = 0;
+
+const bandPlugin = { id: 'band', beforeDatasetsDraw(c) {
+  const { ctx, chartArea: a, scales: { y } } = c; if (!y) return;
+  const top = y.getPixelForValue(180), bot = y.getPixelForValue(70);
+  ctx.save(); ctx.fillStyle = cs('--band'); ctx.fillRect(a.left, top, a.right - a.left, bot - top);
+  ctx.strokeStyle = 'rgba(179,38,62,.4)'; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(a.left, top); ctx.lineTo(a.right, top); ctx.stroke(); ctx.restore(); } };
+const fmtT = iso => { const d = new Date(iso); return d.getDate() + ' ' + d.toLocaleString('en', { month: 'short' }) + ' ' + d.getFullYear() + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const setClock = () => { $('#clock').textContent = fmtT(new Date()); };
+const riskClass = p => p >= .66 ? 'hi' : p >= .33 ? 'mid' : 'lo';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function upsert(key, sel, cfg) { if (charts[key]) charts[key].destroy(); charts[key] = new Chart($(sel), cfg); }
+
+/* ---------- typeable food input with suggestions ---------- */
+const QTY_LEAD = /^\s*((?:\d+(?:\.\d+)?|\d+\/\d+|half|one|two|three|four|five|six|a|an)\s*[x×]?\s+)?/i;
+function foodInput(input, list, onChange) {
+  let items = [], active = -1, timer = null, seq = 0;
+  const seg = () => {
+    const v = input.value, pos = input.selectionStart ?? v.length;
+    const start = Math.max(v.lastIndexOf(',', pos - 1), v.lastIndexOf('+', pos - 1), v.lastIndexOf(';', pos - 1), v.lastIndexOf('&', pos - 1)) + 1;
+    const rest = v.slice(pos).search(/[,+;&]/);
+    const end = rest < 0 ? v.length : pos + rest;
+    return { start, end, text: v.slice(start, end) };
+  };
+  const close = () => { list.hidden = true; active = -1; input.setAttribute('aria-expanded', 'false'); };
+  const render = () => {
+    if (!items.length) return close();
+    list.innerHTML = items.map((f, i) => `<li role="option" data-i="${i}" aria-selected="${i === active}"><span>${esc(f.name)}</span><span class="sm">${esc(f.serving)} · ${f.carbs} g · GI ${f.gi}</span></li>`).join('');
+    list.hidden = false; input.setAttribute('aria-expanded', 'true');
+  };
+  const pick = i => {
+    const s = seg(), qty = (s.text.match(QTY_LEAD) || [])[1] || '', pre = input.value.slice(0, s.start).replace(/\s+$/, '');
+    const head = pre ? pre + ' ' : '';
+    input.value = head + qty + items[i].name + input.value.slice(s.end);
+    const caret = (head + qty + items[i].name).length; input.setSelectionRange(caret, caret);
+    close(); onChange();
+  };
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      const q = seg().text.replace(QTY_LEAD, '').trim(); if (q.length < 2) return close();
+      const my = ++seq; const r = await api('/foods/search?q=' + encodeURIComponent(q)).catch(() => []);
+      if (my !== seq) return; items = r; active = -1; render();
+    }, 140);
+    onChange();
+  });
+  input.addEventListener('keydown', e => {
+    if (list.hidden) return;
+    if (e.key === 'ArrowDown') { active = (active + 1) % items.length; render(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = (active - 1 + items.length) % items.length; render(); e.preventDefault(); }
+    else if (e.key === 'Enter' && active >= 0) { pick(active); e.preventDefault(); }
+    else if (e.key === 'Escape') close();
+  });
+  list.addEventListener('mousedown', e => { const li = e.target.closest('li'); if (li) { e.preventDefault(); pick(+li.dataset.i); } });
+  input.addEventListener('blur', () => setTimeout(close, 120));
+  let justFocused = false;                                                          // typing replaces the prefilled meal
+  input.addEventListener('focus', () => { input.select(); justFocused = true; });
+  input.addEventListener('mouseup', e => { if (justFocused) { e.preventDefault(); justFocused = false; } });
+}
+function chips(el, pm, emptyText) {
+  if (!pm) { el.innerHTML = `<span class="muted">${emptyText}</span>`; return; }
+  el.innerHTML = pm.items.map(i => i.matched
+    ? `<span class="chip">${i.qty !== 1 ? i.qty + ' × ' : ''}${esc(i.name)}<small>${i.carbs_g} g · GI ${i.gi}${i.assumed_gi ? ' assumed' : ''}</small></span>`
+    : `<span class="chip warn" title="Not in the food list. Add carbs like '${esc(i.query)} 30 g'">${esc(i.query)}<small>not found</small></span>`).join('')
+    + (pm.ok ? `<span class="total">${pm.carbs_g} g carbs · GI ${pm.gi} · load ${pm.glycemic_load}</span>` : '');
+}
+
+/* ---------- doctor cohort rail ---------- */
+function renderList() {
+  const q = $('#psearch').value.trim().toLowerCase();
+  let rows = COHORT.filter(p => !q || `patient ${p.id} ${p.age} ${p.sex}`.toLowerCase().includes(q));
+  rows.sort(sortMode === 'attention' ? (a, b) => b.score - a.score : sortMode === 'hba1c' ? (a, b) => b.hba1c - a.hba1c : (a, b) => a.id - b.id);
+  $('#attnCount').textContent = `${COHORT.filter(p => p.attention).length} need attention`;
+  $('#plist').innerHTML = rows.slice(0, 120).map(p => `<li><button data-id="${p.id}" class="${p.attention ? 'attn' : ''}" aria-current="${p.id === pid}"><span class="n">Patient ${p.id}</span><span class="m">${p.age} ${p.sex} · HbA1c ${p.hba1c.toFixed(1)} · in range ${p.tir_24h ?? '–'}%</span><span class="g ${(p.glucose_now ?? 0) > 250 ? 'hi' : ''}">${p.glucose_now ?? '–'}</span></button></li>`).join('') || '<li class="note">No patients match.</li>';
+}
+async function refreshCohort() { if (ME.role !== 'doctor') return; COHORT = await api('/patients'); renderList(); }
+
+/* ---------- patient view ---------- */
+async function init() {
+  ME = await api('/auth/me');
+  $('#who').innerHTML = `Signed in as <b>${ME.display}</b>`;
+  $('#logout').addEventListener('click', async () => { await post('/auth/logout'); location.href = '/login'; });
+  foodInput($('#foodA'), $('#suggA'), forecast); foodInput($('#foodB'), $('#suggB'), forecast);
+  if (ME.role === 'patient') { document.body.classList.add('patient-mode'); return load(ME.patient_id); }
+  COHORT = await api('/patients'); renderList(); loadEvidence();
+  const first = [...COHORT].sort((a, b) => b.score - a.score)[0];
+  load(first.id);
+}
+async function loadAudit() {
+  const rows = await api('/audit'); $('#auditBlock').hidden = false;
+  $('#audit').innerHTML = rows.slice(0, 12).map(r => `<tr><td>${r.time.slice(5)}</td><td>${r.user}</td><td>${r.action.replace(/_/g, ' ')}</td><td class="r">${r.patient ?? ''}</td></tr>`).join('');
+}
+async function load(id) {
+  pid = id; flash = ''; P = await api(`/patients/${id}`); const e = P.ehr;
+  if (ME.role === 'doctor') renderList();
+  $('#ptitle').textContent = ME.role === 'patient' ? 'Your digital twin' : `Patient ${id}, ${e.age}-year-old ${e.sex === 'F' ? 'woman' : 'man'}`;
+  $('#pfacts').innerHTML = [`HbA1c <b>${e.hba1c.toFixed(1)}</b>`, `BMI <b>${e.bmi}</b>`, `diabetes for <b>${e.duration_years} y</b>`,
+    e.on_metformin ? `metformin, <b>${Math.round(e.adherence * 100)}%</b> of doses taken` : 'no metformin', `${e.diet_pattern.replace('_', ' ')} diet`,
+    `in range (24 h) <b>${P.tir_24h}%</b>`].map(s => `<span>${s}</span>`).join('');
+  setClock();
+  if (P.last_sleep_hours != null) $('#sleep').value = P.last_sleep_hours;
+  $('#sleepV').textContent = $('#sleep').value + ' h';
+  $('#foodA').value = P.suggested.text; $('#foodB').value = '';
+  $('#portion').value = 1; $('#portionV').textContent = '1.0x'; $('#walk').checked = true;
+  drawSide(); drawTimeline(); forecast();
+  if (ME.role === 'doctor') loadAudit();
+}
+async function advance(h) {
+  const r = await post(`/patients/${pid}/advance`, { hours: h });
+  await load(pid); await refreshCohort();
+  if (r.reached_end) $('#fnote').textContent = 'End of the recorded 14 days reached. Press Reset to start again.';
+}
+
+/* ---------- forecast ---------- */
+function forecast() { clearTimeout(timer); timer = setTimeout(runForecast, 260); }
+async function runForecast() {
+  const my = ++reqId, a = $('#foodA').value.trim(), b = $('#foodB').value.trim(), sleep = +$('#sleep').value;
+  if (!a) { chips($('#chipsA'), null, 'Type a food, for example "2 idli, sambar".'); clearPlans(); $('#fnote').textContent = 'Type what is being eaten to see the forecast.'; return; }
+  let pa, pb = null;
+  try { [pa, pb] = await Promise.all([post('/foods/parse', { text: a }), b ? post('/foods/parse', { text: b }) : null]); } catch { return; }
+  if (my !== reqId) return;
+  chips($('#chipsA'), pa, ''); chips($('#chipsB'), pb, 'Same meal as plan A');
+  if (!pa.ok || (pb && !pb.ok)) { clearPlans(); $('#fnote').textContent = 'Some foods were not found. Pick from the suggestions, or add carbs like "pizza 40 g".'; return; }
+  let r;
+  try {
+    r = await post(`/patients/${pid}/whatif`, { scenarios: [
+      { label: 'A', foods: a, portion: 1, walk: false, sleep_hours: sleep },
+      { label: 'B', foods: b || a, portion: +$('#portion').value, walk: $('#walk').checked, sleep_hours: sleep } ] });
+  } catch (e) { $('#fnote').textContent = e.message; return; }
+  if (my !== reqId) return;
+  const [A, B] = r.scenarios;
+  [['A', A], ['B', B]].forEach(([k, s]) => {
+    const el = $('#risk' + k), pr = s.p_spike_ensemble;
+    el.className = 'risk ' + riskClass(pr); el.innerHTML = `${Math.round(pr * 100)}%<small>chance of a spike</small>`;
+    $('#det' + k).innerHTML = `Peak <b>${Math.round(s.peak)}</b> mg/dL at ${s.peak_minute} min, above 180 for <b>${s.minutes_above_180} min</b><span class="internals"><br>twin ${Math.round(s.p_spike * 100)}% · model ${Math.round(s.ml_p_spike * 100)}%</span>`;
+  });
+  const miss = [...pa.unmatched, ...(pb ? pb.unmatched : [])];
+  $('#fnote').textContent = (miss.length ? `Not found: ${miss.join(', ')}. Left out of the forecast. ` : '') + (flash ? flash + ' ' : '') + (ME.role === 'doctor' ? r.note + ' ' : '') + 'A spike means a rise of 60 mg/dL or more within 2 hours. Food values are approximate.';
+  const t = A.minutes.map(m => (m / 60).toFixed(1) + ' h');
+  const ds = (label, data, color, x = {}) => ({ label, data, borderColor: color, backgroundColor: color, borderWidth: 2.5, pointRadius: 0, tension: .35, ...x });
+  upsert('fc', '#fc', { type: 'line', data: { labels: t, datasets: [
+    ds('A high', A.hi, 'transparent', { fill: '+1', backgroundColor: 'rgba(201,138,18,.13)', borderWidth: 0 }), ds('A low', A.lo, 'transparent', { borderWidth: 0 }), ds('Plan A', A.glucose, cs('--caution')),
+    ds('B high', B.hi, 'transparent', { fill: '+1', backgroundColor: 'rgba(59,91,219,.11)', borderWidth: 0 }), ds('B low', B.lo, 'transparent', { borderWidth: 0 }), ds('Plan B', B.glucose, cs('--plan-b')) ] },
+    options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { filter: i => i.text.startsWith('Plan'), usePointStyle: true } }, tooltip: { filter: i => i.dataset.label.startsWith('Plan') } },
+      scales: { y: { title: { display: true, text: 'mg/dL' }, suggestedMin: 60, grid: { color: cs('--rule') } }, x: { ticks: { maxTicksLimit: 9 }, grid: { display: false } } } }, plugins: [bandPlugin] });
+}
+function clearPlans() { ['A', 'B'].forEach(k => { $('#risk' + k).className = 'risk'; $('#risk' + k).textContent = '–'; $('#det' + k).textContent = ''; }); }
+
+function drawTimeline() {
+  const T = P.timeline, idx = {}; T.t.forEach((x, i) => idx[x] = i);
+  const marks = T.t.map(() => null); P.meals.forEach(m => { const i = idx[m.time]; if (i != null && T.glucose[i] != null) marks[i] = T.glucose[i]; });
+  upsert('tl', '#tl', { type: 'line', data: { labels: T.t.map(fmtT), datasets: [
+    { label: 'Glucose', data: T.glucose, borderColor: cs('--glucose'), borderWidth: 1.8, pointRadius: 0, tension: .2 },
+    { label: 'Meal logged', data: marks, showLine: false, pointStyle: 'triangle', pointRadius: 6, backgroundColor: cs('--ink'), borderColor: cs('--ink') } ] },
+    options: { maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: false }, plugins: { legend: { labels: { usePointStyle: true } } },
+      scales: { y: { suggestedMin: 60, title: { display: true, text: 'mg/dL' }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { ticks: { maxTicksLimit: 8, maxRotation: 0 }, grid: { display: false } } } }, plugins: [bandPlugin] });
+}
+function drawSide() {
+  const tw = P.twin; $('#gain').textContent = tw.gain.toFixed(2);
+  $('#gainci').textContent = `95% range ${tw.ci_low.toFixed(2)} to ${tw.ci_high.toFixed(2)} · mg/dL per unit of glycemic load`;
+  $('#gnote').textContent = `Learned from ${tw.meals_observed} observed meals. It starts from an HbA1c-based estimate and narrows as readings stream in.`;
+  const h = tw.history;
+  upsert('gh', '#gh', { type: 'line', data: { labels: h.map(x => x.n), datasets: [
+    { label: 'hi', data: h.map(x => x.hi), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(14,124,115,.16)' },
+    { label: 'lo', data: h.map(x => x.lo), borderWidth: 0, pointRadius: 0 },
+    { label: 'Estimate', data: h.map(x => x.gain), borderColor: cs('--glucose'), borderWidth: 2, pointRadius: 0, tension: .2 } ] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { filter: i => i.dataset.label === 'Estimate' } },
+      scales: { x: { title: { display: true, text: 'meals observed' }, ticks: { maxTicksLimit: 6 }, grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,.05)' } } } } });
+  $('#outcomes').innerHTML = P.recent_outcomes.length ? P.recent_outcomes.map(o => `<tr><td>${esc(o.meal.replace(/_/g, ' '))}</td><td class="r">${o.predicted_rise}</td><td class="r ${o.spike ? 'flag' : ''}">${Math.max(0, o.observed_rise)}</td></tr>`).join('') : '<tr><td colspan="3" class="note">No completed meals yet. Stream forward to see outcomes.</td></tr>';
+}
+async function loadEvidence() {
+  try {
+    const m = await api('/model-card'), a = m.ablation, t = m.twin_eval, s = m.spike, row = (k, v) => `<tr><td>${k}</td><td>${v}</td></tr>`;
+    const late = t['after 10 observed meals'], rec = t.parameter_recovery;
+    $('#evidence').innerHTML = `<table><thead><tr><th>Predicting a post-meal spike (AUROC, 45 held-out patients)</th><th>Score</th></tr></thead><tbody>
+      ${row('HbA1c only', s.hba1c_only.auroc)}${row('Meal only', a['meal only'].auroc)}${row('Meal + health record', a['meal + static EHR'].auroc)}
+      ${row('Meal + wearable and CGM data', a['meal + dynamic wearables/CGM'].auroc)}${row('Both streams fused (LightGBM)', a['FUSION (meal + EHR + wearables/CGM)'].auroc)}
+      ${row('Live twin, after 10 meals (180 other patients)', late.auroc_spike_live)}</tbody></table>
+      <table style="margin-top:12px"><thead><tr><th>Error in predicted rise (mg/dL)</th><th>MAE</th></tr></thead><tbody>
+      ${row('Predict the average', late.mae_constant)}${row('Fused LightGBM', s.fusion_lightgbm.rise_mae)}${row('Twin with HbA1c estimate only', late.mae_prior_twin)}${row('Live twin, after 10 meals', late.mae_live_twin)}</tbody></table>
+      <p class="note">The twin's estimate of a patient's response is off by ${rec.median_abs_pct_err_prior}% from the HbA1c start and ${rec.median_abs_pct_err_live}% after about ${Math.round(rec.mean_meals_observed)} meals. All data is synthetic, so these scores show the pipeline works, not clinical accuracy.</p>`;
+  } catch { $('#evidence').innerHTML = '<p class="note">Evaluation results are not available yet. Run the training scripts first.</p>'; }
+}
+
+/* ---------- wiring ---------- */
+document.querySelectorAll('[data-adv]').forEach(b => b.addEventListener('click', () => advance(+b.dataset.adv)));
+$('#reset').addEventListener('click', async () => { await post(`/patients/${pid}/reset`); $('#fnote').textContent = ''; await load(pid); refreshCohort(); });
+['portion', 'sleep', 'walk'].forEach(i => $('#' + i).addEventListener('input', () => { $('#portionV').textContent = (+$('#portion').value).toFixed(1) + 'x'; $('#sleepV').textContent = $('#sleep').value + ' h'; forecast(); }));
+$('#pWalk').addEventListener('click', () => { $('#walk').checked = true; forecast(); });
+$('#pHalf').addEventListener('click', () => { $('#portion').value = .5; $('#portionV').textContent = '0.5x'; forecast(); });
+$('#pSame').addEventListener('click', () => { $('#foodB').value = ''; $('#portion').value = 1; $('#portionV').textContent = '1.0x'; $('#walk').checked = false; forecast(); });
+$('#pSwap').addEventListener('click', async () => {
+  const r = await post('/foods/swap', { text: $('#foodA').value });
+  if (r.changes.length) { $('#foodB').value = r.text; flash = 'Swapped: ' + r.changes.map(c => `${c.was} (GI ${c.gi_was}) to ${c.now} (GI ${c.gi_now})`).join(', ') + '.'; }
+  else flash = 'No lower-GI swap in the food list for these items. Type your own alternative in the second box.';
+  forecast();
+});
+$('#psearch').addEventListener('input', renderList);
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { sortMode = b.dataset.sort; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderList(); }));
+$('#plist').addEventListener('click', e => { const b = e.target.closest('button'); if (b) load(+b.dataset.id); });
+setClock();
+setInterval(setClock, 30000);
+init();
+</script>
+</body>
+</html>

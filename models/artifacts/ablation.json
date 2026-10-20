@@ -1,0 +1,18 @@
+{
+  "meal only": {
+    "auroc": 0.856,
+    "rise_mae": 25.9
+  },
+  "meal + static EHR": {
+    "auroc": 0.868,
+    "rise_mae": 25.1
+  },
+  "meal + dynamic wearables/CGM": {
+    "auroc": 0.869,
+    "rise_mae": 24.4
+  },
+  "FUSION (meal + EHR + wearables/CGM)": {
+    "auroc": 0.871,
+    "rise_mae": 24.6
+  }
+}

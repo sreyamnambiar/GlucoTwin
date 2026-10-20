@@ -1,0 +1,7 @@
+{
+  "rows": 12769,
+  "spike_rate": 0.4546,
+  "baseline_auroc": 0.8518,
+  "extended_auroc": 0.8487,
+  "note": "Separate synthetic ablation; it does not replace or alter the production LightGBM model."
+}
